@@ -32,7 +32,6 @@ public class JwtUtil {
     
     /**
      * 生成JWT token
-     * 
      * @param userId 用户ID
      * @return JWT token
      */
@@ -50,7 +49,6 @@ public class JwtUtil {
     
     /**
      * 从token中获取用户ID
-     * 
      * @param token JWT token
      * @return 用户ID
      */
@@ -71,7 +69,6 @@ public class JwtUtil {
     
     /**
      * 验证token是否有效
-     * 
      * @param token JWT token
      * @return 是否有效
      */
@@ -90,7 +87,6 @@ public class JwtUtil {
     
     /**
      * 获取token过期时间
-     * 
      * @param token JWT token
      * @return 过期时间
      */
@@ -111,7 +107,6 @@ public class JwtUtil {
     
     /**
      * 检查token是否过期
-     * 
      * @param token JWT token
      * @return 是否过期
      */

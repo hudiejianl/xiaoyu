@@ -134,31 +134,26 @@ public class PostServiceImpl implements PostService {
         if ("PUBLIC".equals(visibility)) {
             return true;
         }
-        
         // 未登录用户只能看公开动态
         if (currentUserId == null) {
             return false;
         }
-        
         // 自己的动态总是可见
         if (postPO.getUserId().equals(currentUserId)) {
             return true;
         }
-        
         // 好友可见：需要检查好友关系
         if ("FRIEND".equals(visibility)) {
             // TODO: 实现好友关系检查
             // return friendService.isFriend(postPO.getUserId(), currentUserId);
             return true; // 暂时返回true，等待好友服务实现
         }
-        
         // 校园可见：需要检查是否同校园
         if ("CAMPUS".equals(visibility)) {
             // TODO: 实现校园关系检查
             // return userService.isSameCampus(postPO.getUserId(), currentUserId);
             return true;
         }
-        
         return false;
     }
     

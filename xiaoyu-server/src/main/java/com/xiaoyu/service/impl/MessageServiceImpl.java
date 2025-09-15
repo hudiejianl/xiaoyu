@@ -9,6 +9,7 @@ import com.xiaoyu.entity.MessagePO;
 import com.xiaoyu.mapper.FriendMapper;
 import com.xiaoyu.mapper.MessageMapper;
 import com.xiaoyu.service.MessageService;
+import com.xiaoyu.service.PushService;
 import com.xiaoyu.vo.message.MessageVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -37,6 +38,9 @@ public class MessageServiceImpl implements MessageService {
     
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+    
+    @Autowired
+    private PushService pushService;
     
     private static final String UNREAD_COUNT_KEY = "message:unread:";
     private static final String FRIEND_CACHE_KEY = "friend:relation:";
@@ -67,6 +71,20 @@ public class MessageServiceImpl implements MessageService {
         String unreadKey = UNREAD_COUNT_KEY + messageDTO.getToId();
         redisTemplate.opsForValue().increment(unreadKey);
         redisTemplate.expire(unreadKey, 7, TimeUnit.DAYS);
+        
+        // 通过MQ推送私信消息
+        try {
+            pushService.pushPrivateMessage(
+                messagePO.getId(), 
+                fromUserId, 
+                messageDTO.getToId(), 
+                messageDTO.getContent(), 
+                messageDTO.getMessageType()
+            );
+        } catch (Exception e) {
+            log.error("推送私信消息失败: messageId={}, fromUserId={}, toUserId={}, error={}", 
+                    messagePO.getId(), fromUserId, messageDTO.getToId(), e.getMessage(), e);
+        }
         
         // 转换为VO返回
         return convertToVO(messagePO);

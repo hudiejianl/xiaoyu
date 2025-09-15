@@ -1,7 +1,6 @@
 package com.xiaoyu.config;
 
-import com.xiaoyu.websocket.MessageWebSocketHandler;
-import com.xiaoyu.websocket.NotificationWebSocketHandler;
+import com.xiaoyu.websocket.UnifiedWebSocketHandler;
 import com.xiaoyu.websocket.WebSocketInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -19,23 +18,24 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 public class WebSocketConfig implements WebSocketConfigurer {
     
     @Autowired
-    private MessageWebSocketHandler messageWebSocketHandler;
-    
-    @Autowired
-    private NotificationWebSocketHandler notificationWebSocketHandler;
+    private UnifiedWebSocketHandler unifiedWebSocketHandler;
     
     @Autowired
     private WebSocketInterceptor webSocketInterceptor;
     
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        // 注册消息WebSocket处理器
-        registry.addHandler(messageWebSocketHandler, "/ws/messages")
+        // 注册统一WebSocket处理器 - 只负责消息转发
+        registry.addHandler(unifiedWebSocketHandler, "/ws")
                 .addInterceptors(webSocketInterceptor)
                 .setAllowedOrigins("*");
         
-        // 注册通知WebSocket处理器
-        registry.addHandler(notificationWebSocketHandler, "/ws/notifications")
+        // 保持向后兼容的路径
+        registry.addHandler(unifiedWebSocketHandler, "/ws/messages")
+                .addInterceptors(webSocketInterceptor)
+                .setAllowedOrigins("*");
+        
+        registry.addHandler(unifiedWebSocketHandler, "/ws/notifications")
                 .addInterceptors(webSocketInterceptor)
                 .setAllowedOrigins("*");
     }

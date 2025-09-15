@@ -20,14 +20,28 @@ spring:
       port: ${xiaoyu.redis.port}
       password: ${xiaoyu.redis.password}
       database: ${xiaoyu.redis.database}
-
+  rabbitmq:
+    host: ${xiaoyu.rabbitmq.host:localhost}
+    port: ${xiaoyu.rabbitmq.port:5672}
+    username: ${xiaoyu.rabbitmq.username:guest}
+    password: ${xiaoyu.rabbitmq.password:guest}
+    virtual-host: ${xiaoyu.rabbitmq.virtual-host:/}
+    connection-timeout: 15000
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    listener:
+      simple:
+        acknowledge-mode: auto
+        retry:
+          enabled: true
+          initial-interval: 1000
+          max-attempts: 3
+          multiplier: 2
 
 mybatis-plus:
-  #mapper配置文件
   mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: com.xiaoyu.entity    # 全局配置文件中的别名
+  type-aliases-package: com.xiaoyu.entity
   configuration:
-    #开启驼峰命名
     map-underscore-to-camel-case: true
 
 logging:
@@ -39,17 +53,12 @@ logging:
         controller: info
         utils: info
 
-
 xiaoyu:
   jwt:
-    # 设置jwt签名加密时使用的秘钥
     admin-secret-key: "xiao yu"
-    # 设置jwt过期时间
     admin-ttl: 7200000
-    # 设置前端传递过来的令牌名称【在前端进行设置，需要与前端协调】
     admin-token-name: token
 
-# 阿里云OSS配置
 aliyun:
   oss:
     access-key-id: ${xiaoyu.oss.access-key-id}
@@ -58,8 +67,8 @@ aliyun:
     bucket-name: ${xiaoyu.oss.bucket-name}
     domain: ${xiaoyu.oss.domain}
     path-prefix: xiaoyu/
-    max-file-size: 10485760  # 10MB
-    allowed-types: 
+    max-file-size: 10485760
+    allowed-types:
       - jpg
       - jpeg
       - png

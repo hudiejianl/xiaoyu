@@ -18,21 +18,7 @@ public class SearchServiceImpl implements SearchService {
     SearchHotMapper searchHotMapper;
 
     @Override
-    public List<SearchStatsVO> searchHot(){
-        List<SearchHotwordPO> poList=searchHotMapper.selectList(
-                new LambdaQueryWrapper<SearchHotwordPO>()
-                        .eq(SearchHotwordPO::getIsHot,1)
-                        .orderByDesc(SearchHotwordPO::getSearchCnt)
-                        .last("limit 10")
-        );
-        List<SearchStatsVO> voList=new ArrayList<SearchStatsVO>();
-        if(poList!=null&&poList.size()>0){
-            for(SearchHotwordPO po:poList){
-                SearchStatsVO vo=new SearchStatsVO();
-                BeanUtils.copyProperties(po,vo);
-                voList.add(vo);
-            }
-        }
-        return voList;
+    public List<SearchStatsVO> searchHot() {
+        return null;
     }
 }

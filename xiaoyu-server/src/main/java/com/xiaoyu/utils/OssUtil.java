@@ -21,7 +21,6 @@ public class OssUtil {
 
     /**
      * 文件上传
-     *
      * @param bytes
      * @param objectName
      * @return
@@ -68,7 +67,6 @@ public class OssUtil {
 
     /**
      * 删除文件
-     *
      * @param objectName 对象名称
      * @return 是否删除成功
      */

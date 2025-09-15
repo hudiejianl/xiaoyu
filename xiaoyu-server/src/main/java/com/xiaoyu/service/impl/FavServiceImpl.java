@@ -2,14 +2,11 @@ package com.xiaoyu.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.xiaoyu.entity.FavoritePO;
-import com.xiaoyu.entity.NotificationPO;
 import com.xiaoyu.entity.PostPO;
-import com.xiaoyu.entity.UserPO;
 import com.xiaoyu.mapper.FavMapper;
 import com.xiaoyu.mapper.PostMapper;
-import com.xiaoyu.mapper.UserMapper;
 import com.xiaoyu.service.FavService;
-import com.xiaoyu.service.NotificationService;
+import com.xiaoyu.service.PushService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,14 +20,13 @@ public class FavServiceImpl implements FavService {
     @Autowired
     private FavMapper favMapper;
     
-    @Autowired
-    private NotificationService notificationService;
     
     @Autowired
     private PostMapper postMapper;
     
+    
     @Autowired
-    private UserMapper userMapper;
+    private PushService pushService;
 
     @Override
     public void addFavorite(Long itemId, Long userId, String itemType) {
@@ -47,8 +43,8 @@ public class FavServiceImpl implements FavService {
             favorite.setCreatedAt(LocalDateTime.now());
             favMapper.insert(favorite);
             
-            // 创建收藏通知
-            createFavoriteNotification(itemId, userId, itemType);
+            // 通过新的推送服务发送收藏通知
+            createFavoriteNotificationViaPushService(itemId, userId, itemType);
             
         } catch (DuplicateKeyException e) {
             // 处理并发情况下的重复插入
@@ -98,9 +94,9 @@ public class FavServiceImpl implements FavService {
     }
     
     /**
-     * 创建收藏通知
+     * 通过新的推送服务创建收藏通知
      */
-    private void createFavoriteNotification(Long itemId, Long fromUserId, String itemType) {
+    private void createFavoriteNotificationViaPushService(Long itemId, Long fromUserId, String itemType) {
         try {
             // 获取被收藏内容的作者ID
             Long toUserId = getContentAuthorId(itemId, itemType);
@@ -110,36 +106,15 @@ public class FavServiceImpl implements FavService {
                 return;
             }
             
-            // 获取收藏用户信息
-            UserPO fromUser = userMapper.selectById(fromUserId);
-            if (fromUser == null) {
-                return;
-            }
-            
-            // 构建通知内容
-            String title = "收到新的收藏";
-            String content = String.format("%s 收藏了你的%s", 
-                fromUser.getNickname(), 
-                getContentTypeName(itemType));
-            
-            // 创建通知
-            NotificationPO notification = new NotificationPO();
-            notification.setUserId(toUserId);
-            notification.setType(NotificationPO.Type.FAVORITE);
-            notification.setTitle(title);
-            notification.setContent(content);
-            notification.setRefId(itemId);
-            notification.setRefType(getNotificationRefType(itemType));
-            notification.setStatus(NotificationPO.Status.UNREAD);
-            notification.setCreatedAt(LocalDateTime.now());
-            
-            notificationService.createNotification(notification);
+            // 通过推送服务发送收藏通知
+            pushService.pushFavoriteNotification(toUserId, fromUserId, itemId, itemType);
             
         } catch (Exception e) {
             log.error("创建收藏通知失败: itemId={}, fromUserId={}, itemType={}, error={}", 
                 itemId, fromUserId, itemType, e.getMessage(), e);
         }
     }
+    
     
     /**
      * 获取内容作者ID
@@ -157,31 +132,4 @@ public class FavServiceImpl implements FavService {
         }
     }
     
-    /**
-     * 获取内容类型中文名称
-     */
-    private String getContentTypeName(String itemType) {
-        switch (itemType.toUpperCase()) {
-            case "POST":
-                return "动态";
-            case "TASK":
-                return "任务";
-            default:
-                return "内容";
-        }
-    }
-    
-    /**
-     * 获取通知关联类型
-     */
-    private NotificationPO.RefType getNotificationRefType(String itemType) {
-        switch (itemType.toUpperCase()) {
-            case "POST":
-                return NotificationPO.RefType.POST;
-            case "TASK":
-                return NotificationPO.RefType.TASK;
-            default:
-                return NotificationPO.RefType.POST;
-        }
-    }
 }

@@ -1,4 +1,4 @@
-package com.xiaoyu.controller;
+package com.xiaoyu.controller.mq;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.xiaoyu.context.BaseContext;

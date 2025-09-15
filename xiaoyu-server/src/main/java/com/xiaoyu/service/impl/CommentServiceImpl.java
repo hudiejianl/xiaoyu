@@ -20,10 +20,9 @@ import com.xiaoyu.mapper.LikeMapper;
 import com.xiaoyu.mapper.PostMapper;
 import com.xiaoyu.mapper.UserMapper;
 import com.xiaoyu.service.CommentService;
-import com.xiaoyu.service.NotificationService;
+import com.xiaoyu.service.PushService;
 import com.xiaoyu.vo.comment.CommentVO;
 import com.xiaoyu.vo.user.UserSimpleVO;
-import com.xiaoyu.vo.user.UserVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -42,9 +41,9 @@ public class CommentServiceImpl implements CommentService {
     @Autowired
     LikeMapper likeMapper;
     @Autowired
-    private NotificationService notificationService;
-    @Autowired
     private PostMapper postMapper;
+    @Autowired
+    private PushService pushService;
 
     @Override
     public void addComment(CommentCreateDTO comment) {
@@ -75,11 +74,10 @@ public class CommentServiceImpl implements CommentService {
 
     /**
      * 查询一篇文章的全部评论（含二级回复）
-     * 路径：GET /api/comments/{post_id}
      */
     @Override
     public IPage<CommentVO> getComments(Long postId, int page, int size, String sort) {
-        /* 1. 先查一级评论（parent_id = 0） */
+        //先查一级评论parent_id = 0
         IPage<CommentPO> poPage = commentMapper.selectPage(
                 new Page<>(page, size),
                 new QueryWrapper<CommentPO>()
@@ -90,38 +88,36 @@ public class CommentServiceImpl implements CommentService {
                         .orderBy("hot".equals(sort), false, "like_cnt", "created_at")
         );
 
-        /* 2. 取出本页所有一级评论 id，方便一次把二级评论查回来 */
+        //取出本页所有一级评论 id
         List<Long> rootIds = poPage.getRecords()
                 .stream()
                 .map(CommentPO::getId)
                 .collect(Collectors.toList());
 
-        /* 3. 一次性查二级评论（parent_id in rootIds） */
+        //一次性查二级评论
         List<CommentPO> subList = CollUtil.isEmpty(rootIds) ? Collections.emptyList()
                 : commentMapper.selectList(
                 new QueryWrapper<CommentPO>()
                         .in("parent_id", rootIds)
                         .orderByAsc("created_at"));
 
-        /* 4. 把二级按 parent_id 分组，方便后面拼装 */
+        //把二级按 parent_id 分组
         Map<Long, List<CommentPO>> subMap = subList.stream()
                 .collect(Collectors.groupingBy(CommentPO::getParentId));
 
-        /* 5. 组装 Vo（一级 + 二级 + user + @用户 + 点赞信息） */
+        /*拼Vo（一级 二级 user @用户 点赞信息*/
         List<CommentVO> voList = poPage.getRecords().stream().map(root -> {
             CommentVO vo = new CommentVO();
             BeanUtil.copyProperties(root, vo);          // 同名字段快速拷贝（ Hutool 工具，Spring 的 BeanUtils 也行）
 
-            /* 5.1 发评论的用户信息 */
+            // 发评论的用户信息
             vo.setUser(buildUserVo(root.getUserId()));
 
-            /* 5.2 @用户 JSON 数组  -> List<UserVo> */
+            /*@用户 JSON 数组  -> List<UserVo>*/
             vo.setAtUsers(parseAtUsers(root.getAtUsers()));
 
-            /* 5.3 当前用户是否点赞（示例，用 SecurityUtil 拿当前登录 uid） */
-            // 当前用户
+            // 5.3 当前用户是否点赞
             Long currUserId = root.getUserId();
-            // 是否点赞
             boolean isLiked = likeMapper.selectCount(
                     new LambdaQueryWrapper<LikePO>()
                             .eq(LikePO::getUserId, currUserId)
@@ -131,7 +127,7 @@ public class CommentServiceImpl implements CommentService {
 
             vo.setIsLiked(isLiked);
 
-            /* 5.4 二级回复 */
+            // 5.4 二级回复
             List<CommentVO> replies = Optional.ofNullable(subMap.get(root.getId()))
                     .orElse(Collections.emptyList())
                     .stream()
@@ -143,14 +139,14 @@ public class CommentServiceImpl implements CommentService {
             return vo;
         }).collect(Collectors.toList());
 
-        /* 6. 把 List 重新包成 IPage 返回（前端需要分页信息） */
+        //6. 把 List 重新包成 IPage 返
         IPage<CommentVO> voPage = new Page<>(page, size);
         voPage.setRecords(voList);
         voPage.setTotal(poPage.getTotal());
         return voPage;
     }
 
-    /* =============== 下面几个小工具方法 =============== */
+    /*工具方*/
 
     private UserSimpleVO buildUserVo(Long userId) {
         UserPO user = userMapper.selectById(userId);
@@ -246,18 +242,16 @@ public class CommentServiceImpl implements CommentService {
                 content = String.format("%s 回复了你的动态", fromUser.getNickname());
             }
             
-            // 创建通知
-            NotificationPO notification = new NotificationPO();
-            notification.setUserId(toUserId);
-            notification.setType(NotificationPO.Type.COMMENT);
-            notification.setTitle(title);
-            notification.setContent(content);
-            notification.setRefId(postId);
-            notification.setRefType(NotificationPO.RefType.POST);
-            notification.setStatus(NotificationPO.Status.UNREAD);
-            notification.setCreatedAt(LocalDateTime.now());
-            
-            notificationService.createNotification(notification);
+            // 使用PushService发送通知
+            pushService.pushNotification(
+                toUserId,
+                NotificationPO.Type.COMMENT.name(),
+                title,
+                content,
+                postId,
+                NotificationPO.RefType.POST.name(),
+                fromUserId
+            );
             
         } catch (Exception e) {
             log.error("创建评论通知失败: commentId={}, error={}", 
@@ -276,18 +270,16 @@ public class CommentServiceImpl implements CommentService {
             String title = "收到新的回复";
             String content = String.format("%s 回复了你的评论", fromUser.getNickname());
             
-            // 创建通知
-            NotificationPO notification = new NotificationPO();
-            notification.setUserId(toUserId);
-            notification.setType(NotificationPO.Type.COMMENT);
-            notification.setTitle(title);
-            notification.setContent(content);
-            notification.setRefId(replyComment.getItemId()); // 关联到动态ID
-            notification.setRefType(NotificationPO.RefType.POST);
-            notification.setStatus(NotificationPO.Status.UNREAD);
-            notification.setCreatedAt(LocalDateTime.now());
-            
-            notificationService.createNotification(notification);
+            // 使用PushService发送通知
+            pushService.pushNotification(
+                toUserId,
+                NotificationPO.Type.COMMENT.name(),
+                title,
+                content,
+                replyComment.getItemId(), // 关联到动态ID
+                NotificationPO.RefType.POST.name(),
+                fromUser.getId()
+            );
             
         } catch (Exception e) {
             log.error("创建回复通知失败: replyCommentId={}, parentCommentId={}, error={}", 

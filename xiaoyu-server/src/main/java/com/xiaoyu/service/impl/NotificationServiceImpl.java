@@ -33,9 +33,6 @@ public class NotificationServiceImpl implements NotificationService {
     
     @Autowired
     private UserMapper userMapper;
-    
-    @Autowired
-    private NotificationPushService notificationPushService;
 
     @Override
     public IPage<NotificationVO> getNotifications(Long userId, String type, String status, Integer page, Integer size) {
@@ -80,13 +77,8 @@ public class NotificationServiceImpl implements NotificationService {
         
         if (success) {
             log.info("通知标记已读成功: notificationId={}", notificationId);
-            
-            // 实时推送已读状态更新
-            notificationPushService.pushNotificationReadUpdate(userId, notificationId);
-            
             // 推送未读数量更新
             Integer unreadCount = Math.toIntExact(getUnreadCount(userId));
-            notificationPushService.pushUnreadCountUpdate(userId, unreadCount);
         } else {
             log.warn("通知标记已读失败: notificationId={}", notificationId);
         }
@@ -104,14 +96,6 @@ public class NotificationServiceImpl implements NotificationService {
                     .set("status", NotificationPO.Status.READ);
         
         int updated = notificationMapper.update(null, updateWrapper);
-        
-        if (updated > 0) {
-            // 实时推送全部通知已读更新
-            notificationPushService.pushAllNotificationsReadUpdate(userId);
-            
-            // 推送未读数量更新（应该为0）
-            notificationPushService.pushUnreadCountUpdate(userId, 0);
-        }
         
         log.info("标记所有通知为已读完成: userId={}, updated={}", userId, updated);
         return updated;
@@ -146,23 +130,6 @@ public class NotificationServiceImpl implements NotificationService {
         int inserted = notificationMapper.insert(notification);
         boolean success = inserted > 0;
         
-        if (success) {
-            log.info("通知创建成功: id={}", notification.getId());
-            
-            // 实时推送新通知给用户
-            Long userId = notification.getUserId();
-            if (notificationPushService.isUserOnline(userId)) {
-                NotificationVO notificationVO = convertToVO(notification);
-                notificationPushService.pushNotificationToUser(userId, notificationVO);
-                
-                // 推送未读数量更新
-                Integer unreadCount = Math.toIntExact(getUnreadCount(userId));
-                notificationPushService.pushUnreadCountUpdate(userId, unreadCount);
-            }
-        } else {
-            log.error("通知创建失败");
-        }
-        
         return success;
     }
 
@@ -192,13 +159,13 @@ public class NotificationServiceImpl implements NotificationService {
 
     /**
      * 根据通知信息获取来源用户
-     * 
+     *
      * @param notification 通知对象
      * @return 来源用户信息
      */
     private UserSimpleVO getFromUserByNotification(NotificationPO notification) {
         // 对于系统通知和违规通知，没有来源用户
-        if (notification.getType() == NotificationPO.Type.SYSTEM || 
+        if (notification.getType() == NotificationPO.Type.SYSTEM ||
             notification.getType() == NotificationPO.Type.VIOLATION) {
             return null;
         }

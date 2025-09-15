@@ -25,6 +25,9 @@ public class WebSocketSessionManager {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
     
+    @Autowired
+    private UserOnlineEventHandler userOnlineEventHandler;
+    
     private final ObjectMapper objectMapper = new ObjectMapper();
     
     // 存储用户ID与WebSocket会话的映射
@@ -38,6 +41,9 @@ public class WebSocketSessionManager {
         // 在Redis中标记用户在线
         redisTemplate.opsForValue().set("user:online:" + userId, "1");
         log.info("用户 {} WebSocket连接建立", userId);
+        
+        // 触发用户上线事件，推送离线消息
+        userOnlineEventHandler.handleUserOnline(userId);
     }
     
     /**
@@ -66,9 +72,9 @@ public class WebSocketSessionManager {
     }
     
     /**
-     * 向指定用户发送消息
+     * 向指定用户转发消息（纯转发，不处理业务逻辑）
      */
-    public boolean sendMessageToUser(Long userId, Object message) {
+    public boolean forwardMessageToUser(Long userId, Object message) {
         WebSocketSession session = USER_SESSIONS.get(userId);
         if (session != null && session.isOpen()) {
             try {
@@ -76,7 +82,7 @@ public class WebSocketSessionManager {
                 session.sendMessage(new TextMessage(messageJson));
                 return true;
             } catch (Exception e) {
-                log.error("向用户 {} 发送消息失败: {}", userId, e.getMessage());
+                log.error("向用户 {} 转发消息失败: {}", userId, e.getMessage());
             }
         }
         return false;
@@ -110,7 +116,7 @@ public class WebSocketSessionManager {
     public void broadcastMessage(Object message) {
         USER_SESSIONS.forEach((userId, session) -> {
             if (session.isOpen()) {
-                sendMessageToUser(userId, message);
+                forwardMessageToUser(userId, message);
             }
         });
     }
