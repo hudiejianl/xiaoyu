@@ -11,10 +11,10 @@ import lombok.Data;
 public class TopicPostPO {
 
     /** 话题 ID */
-    @TableId
+    @TableField("topic_id")
     private Long topicId;
 
     /** 动态 ID */
-    @TableId
+    @TableField("post_id")
     private Long postId;
 }

@@ -1,0 +1,20 @@
+xiaoyu:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    host: localhost
+    port: 3306
+    database: xiaoyu
+    username: root
+    password: '@china520'
+
+  redis:
+    host: localhost
+    port: 6379
+    password: 123456
+    database: 0
+  oss:
+    access-key-id: your_access_key_id
+    access-key-secret: your_access_key_secret
+    endpoint: oss-cn-hangzhou.aliyuncs.com  # 根据你的区域修改
+    bucket-name: your_bucket_name
+    domain: https://your_bucket_name.oss-cn-hangzhou.aliyuncs.com  # 或者你的自定义域名

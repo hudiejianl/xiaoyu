@@ -21,28 +21,21 @@
 
     <properties>
         <java.version>21</java.version>
-        <mybatis.spring>2.2.0</mybatis.spring>
-        <lombok>1.18.20</lombok>
-        <fastjson>1.2.76</fastjson>
+        <lombok>1.18.34</lombok>
+        <fastjson>1.2.83</fastjson>
         <commons.lang>2.6</commons.lang>
         <druid>1.2.1</druid>
-        <pagehelper>1.3.0</pagehelper>
         <aliyun.sdk.oss>3.10.2</aliyun.sdk.oss>
         <knife4j>3.0.2</knife4j>
         <aspectj>1.9.4</aspectj>
         <jjwt>0.9.1</jjwt>
         <jaxb-api>2.3.1</jaxb-api>
-        <poi>3.16</poi>
+        <poi>5.3.0</poi>
         <mysql-connector.version>8.0.36</mysql-connector.version>
     </properties>
     <dependencyManagement>
         <dependencies>
 
-            <dependency>
-                <groupId>org.mybatis.spring.boot</groupId>
-                <artifactId>mybatis-spring-boot-starter</artifactId>
-                <version>${mybatis.spring}</version>
-            </dependency>
 
             <dependency>
                 <groupId>org.projectlombok</groupId>
@@ -65,16 +58,8 @@
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>druid-spring-boot-starter</artifactId>
-                <version>${druid}</version>
             </dependency>
 
-            <!--            项目引入了 pagehelper-spring-boot-starter（分页插件），而 PageHelper 会间接依赖原生 MyBatis 包：-->
-            <!--            会导致版本冲突的问题-->
-            <!--            <dependency>-->
-            <!--                <groupId>com.github.pagehelper</groupId>-->
-            <!--                <artifactId>pagehelper-spring-boot-starter</artifactId>-->
-            <!--                <version>${pagehelper}</version>-->
-            <!--            </dependency>-->
 
             <dependency>
                 <groupId>com.github.xiaoymin</groupId>
@@ -125,12 +110,7 @@
                 <artifactId>poi-ooxml</artifactId>
                 <version>${poi}</version>
             </dependency>
-            <!--微信支付-->
-            <dependency>
-                <groupId>com.github.wechatpay-apiv3</groupId>
-                <artifactId>wechatpay-apache-httpclient</artifactId>
-                <version>0.4.8</version>
-            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

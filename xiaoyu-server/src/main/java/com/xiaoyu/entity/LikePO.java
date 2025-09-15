@@ -11,20 +11,25 @@ import java.time.LocalDateTime;
 @TableName("likes")
 public class LikePO {
 
+    /** 主键ID */
+    @TableId(type = IdType.AUTO)
+    private Long id;
+
     /** 点赞者 UID */
-    @TableId
+    @TableField("user_id")
     private Long userId;
 
     /** 业务对象 ID */
-    @TableId
+    @TableField("item_id")
     private Long itemId;
 
     /** 业务类型 */
-    @TableId
+    @TableField("item_type")
     @EnumValue
     private ItemType itemType;
 
     /** 点赞时间 */
+    @TableField("created_at")
     private LocalDateTime createdAt;
 
     public enum ItemType {

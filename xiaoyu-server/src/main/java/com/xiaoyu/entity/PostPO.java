@@ -19,8 +19,14 @@ public class PostPO {
     /** 发布者 UID */
     private Long userId;
 
+    /** 动态标题 */
+    private String title;
+
     /** 文本内容 */
     private String content;
+
+    /** 校区ID */
+    private Long campusId;
 
     /** 可见范围 */
     @EnumValue

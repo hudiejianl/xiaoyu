@@ -1,0 +1,77 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: dev
+  main:
+    allow-circular-references: true
+  mvc:
+    pathmatch:
+      matching-strategy: ANT_PATH_MATCHER
+  datasource:
+    driver-class-name: ${xiaoyu.datasource.driver-class-name}
+    url: jdbc:mysql://${xiaoyu.datasource.host}:${xiaoyu.datasource.port}/${xiaoyu.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8mb4&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${xiaoyu.datasource.username}
+    password: ${xiaoyu.datasource.password}
+  data:
+    redis:
+      host: ${xiaoyu.redis.host}
+      port: ${xiaoyu.redis.port}
+      password: ${xiaoyu.redis.password}
+      database: ${xiaoyu.redis.database}
+
+
+mybatis-plus:
+  #mapper配置文件
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.xiaoyu.entity    # 全局配置文件中的别名
+  configuration:
+    #开启驼峰命名
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    com:
+      xiaoyu:
+        mapper: debug
+        service: info
+        controller: info
+        utils: info
+
+
+xiaoyu:
+  jwt:
+    # 设置jwt签名加密时使用的秘钥
+    admin-secret-key: "xiao yu"
+    # 设置jwt过期时间
+    admin-ttl: 7200000
+    # 设置前端传递过来的令牌名称【在前端进行设置，需要与前端协调】
+    admin-token-name: token
+
+# 阿里云OSS配置
+aliyun:
+  oss:
+    access-key-id: ${xiaoyu.oss.access-key-id}
+    access-key-secret: ${xiaoyu.oss.access-key-secret}
+    endpoint: ${xiaoyu.oss.endpoint}
+    bucket-name: ${xiaoyu.oss.bucket-name}
+    domain: ${xiaoyu.oss.domain}
+    path-prefix: xiaoyu/
+    max-file-size: 10485760  # 10MB
+    allowed-types: 
+      - jpg
+      - jpeg
+      - png
+      - gif
+      - bmp
+      - webp
+      - mp4
+      - avi
+      - mov
+      - mp3
+      - wav
+      - pdf
+      - doc
+      - docx
+      - txt
