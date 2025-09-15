@@ -1,0 +1,27 @@
+# 开发环境配置示例文件
+# 请复制此文件为 application-dev.yml 并填入真实的配置信息
+
+xiaoyu:
+  # 数据库配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    host: localhost
+    port: 3306
+    database: xiaoyu
+    username: your_username
+    password: your_password
+  
+  # Redis配置
+  redis:
+    host: localhost
+    port: 6379
+    password: your_redis_password
+    database: 0
+  
+  # 阿里云OSS配置
+  oss:
+    access-key-id: your_access_key_id
+    access-key-secret: your_access_key_secret
+    endpoint: oss-cn-hangzhou.aliyuncs.com  # 根据你的区域修改
+    bucket-name: your_bucket_name
+    domain: https://your_bucket_name.oss-cn-hangzhou.aliyuncs.com  # 或者你的自定义域名

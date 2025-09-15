@@ -1,0 +1,50 @@
+# 私信系统配置
+messaging:
+  websocket:
+    # WebSocket连接路径
+    endpoint: /ws/messages
+    # 允许的跨域来源
+    allowed-origins: "*"
+    # 连接超时时间（秒）
+    connection-timeout: 30
+    # 心跳间隔（秒）
+    heartbeat-interval: 30
+  
+  redis:
+    # 在线用户缓存前缀
+    online-user-prefix: "user:online:"
+    # 未读消息数量缓存前缀
+    unread-count-prefix: "message:unread:"
+    # 好友关系缓存前缀
+    friend-relation-prefix: "friend:relation:"
+    # 缓存过期时间（小时）
+    cache-expire-hours: 24
+  
+  message:
+    # 单次查询聊天记录最大数量
+    max-page-size: 100
+    # 默认分页大小
+    default-page-size: 20
+    # 消息内容最大长度
+    max-content-length: 1000
+
+# JWT配置
+jwt:
+  secret: xiaoyu-secret-key-for-jwt-token-generation-2024
+  expiration: 7200 # 2小时，单位：秒
+
+# Redis配置
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: 
+      database: 0
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
