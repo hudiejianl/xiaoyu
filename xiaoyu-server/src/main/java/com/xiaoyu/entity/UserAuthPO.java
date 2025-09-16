@@ -31,7 +31,15 @@ public class UserAuthPO {
     /** 验证通过时间 */
     private LocalDateTime verifiedAt;
 
+    /** 创建时间 */
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createdAt;
+
+    /** 更新时间 */
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updatedAt;
+
     public enum IdentityType {
-        QQ, WECHAT, MOBILE, APPLE
+        QQ, WECHAT, MOBILE, APPLE, PASSWORD
     }
 }

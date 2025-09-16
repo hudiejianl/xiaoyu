@@ -18,6 +18,9 @@ import javax.validation.Valid;
 /**
  * 私信消息控制器
  * 
+ * @deprecated 推荐使用WebSocket直接发送私信消息以获得更好的实时性
+ * HTTP接口仍然保留用于兼容性和特殊场景
+ * 
  * @author xiaoyu
  */
 @RestController
@@ -31,6 +34,7 @@ public class MessageController {
     
     @PostMapping
     @Operation(summary = "发送私信", description = "向好友发送私信")
+    @Deprecated
     public Result<MessageVO> sendMessage(@Valid @RequestBody MessageCreateDTO messageDTO) {
         Long fromUserId = BaseContext.getCurrentId();
         log.info("发送私信: fromUserId={}, toId={}, content={}", fromUserId, messageDTO.getToId(), messageDTO.getContent());

@@ -48,6 +48,11 @@ public class UserSimpleVO {
     private Long id;
     
     /**
+     * 用户名
+     */
+    private String username;
+    
+    /**
      * 用户昵称
      */
     private String nickname;
@@ -97,6 +102,14 @@ public class UserSimpleVO {
     
     public void setId(Long id) {
         this.id = id;
+    }
+    
+    public String getUsername() {
+        return username;
+    }
+    
+    public void setUsername(String username) {
+        this.username = username;
     }
     
     public String getNickname() {

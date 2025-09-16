@@ -2,6 +2,7 @@
 -- 1. 用户主表
 CREATE TABLE users (
                        id                   BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '用户主键',
+                       username             VARCHAR(50) UNIQUE COMMENT '用户名（用于登录）',
                        nickname             VARCHAR(30)  NOT NULL COMMENT '昵称',
                        avatar_url           VARCHAR(255) COMMENT '头像 OSS 地址',
                        birthday             DATE COMMENT '生日',
@@ -25,10 +26,12 @@ CREATE TABLE users (
 CREATE TABLE user_auths (
                             id            BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键',
                             user_id       BIGINT NOT NULL COMMENT '用户 ID',
-                            identity_type ENUM('QQ','WECHAT','MOBILE','APPLE') COMMENT '授权方式',
-                            identifier    VARCHAR(128) NOT NULL COMMENT '唯一标识：openid/手机号',
+                            identity_type ENUM('QQ','WECHAT','MOBILE','APPLE','PASSWORD') COMMENT '授权方式',
+                            identifier    VARCHAR(128) NOT NULL COMMENT '唯一标识：openid/手机号/用户名',
                             credential    VARCHAR(255) COMMENT '密码或 access_token',
                             verified_at   DATETIME COMMENT '验证通过时间',
+                            created_at    DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                            updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
                             UNIQUE KEY uk_type_id (identity_type, identifier)
 #                             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户授权表';

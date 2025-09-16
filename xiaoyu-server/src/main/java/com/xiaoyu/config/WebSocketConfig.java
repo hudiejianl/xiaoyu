@@ -10,6 +10,7 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 
 /**
  * WebSocket配置类
+ * 现在支持通过WebSocket直接发送私信消息，提高实时性
  * 
  * @author xiaoyu
  */

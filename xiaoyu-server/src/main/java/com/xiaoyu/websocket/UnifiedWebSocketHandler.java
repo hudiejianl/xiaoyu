@@ -1,6 +1,10 @@
 package com.xiaoyu.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.xiaoyu.context.BaseContext;
+import com.xiaoyu.dto.message.MessageCreateDTO;
+import com.xiaoyu.service.MessageService;
+import com.xiaoyu.vo.message.MessageVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -24,6 +28,9 @@ public class UnifiedWebSocketHandler implements WebSocketHandler {
     
     @Autowired
     private UserOnlineEventHandler userOnlineEventHandler;
+    
+    @Autowired
+    private MessageService messageService;
     
     private final ObjectMapper objectMapper = new ObjectMapper();
     
@@ -66,7 +73,7 @@ public class UnifiedWebSocketHandler implements WebSocketHandler {
             
             log.debug("收到用户 {} 的WebSocket消息: type={}", userId, messageType);
             
-            // 只处理基础的连接管理消息，业务逻辑通过MQ处理
+            // 处理连接管理消息和私信消息
             switch (messageType) {
                 case "ping":
                     handlePingMessage(userId);
@@ -74,15 +81,18 @@ public class UnifiedWebSocketHandler implements WebSocketHandler {
                 case "heartbeat":
                     handleHeartbeatMessage(userId);
                     break;
+                case "send_message":
+                    handleSendMessage(userId, messageData);
+                    break;
                 default:
-                    // 对于业务消息，返回提示信息
+                    // 对于其他业务消息，返回提示信息
                     Map<String, Object> errorMessage = Map.of(
                         "type", "error",
-                        "message", "业务操作请通过API接口处理",
+                        "message", "不支持的消息类型: " + messageType,
                         "timestamp", System.currentTimeMillis()
                     );
                     sessionManager.forwardMessageToUser(userId, errorMessage);
-                    log.warn("用户 {} 尝试通过WebSocket处理业务消息: {}", userId, messageType);
+                    log.warn("用户 {} 发送了不支持的消息类型: {}", userId, messageType);
             }
             
         } catch (Exception e) {
@@ -131,5 +141,63 @@ public class UnifiedWebSocketHandler implements WebSocketHandler {
             "timestamp", System.currentTimeMillis()
         );
         sessionManager.forwardMessageToUser(userId, heartbeatResponse);
+    }
+    
+    /**
+     * 处理发送私信消息 - 直接调用现有MessageService，复用所有业务逻辑
+     */
+    private void handleSendMessage(Long userId, Map<String, Object> messageData) {
+        try {
+            // 设置当前用户上下文
+            BaseContext.setCurrentId(userId);
+            
+            // 1. 立即响应客户端确认收到请求
+            String tempMessageId = "temp_" + System.currentTimeMillis();
+            Map<String, Object> sendingResponse = Map.of(
+                "type", "message_sending",
+                "temp_id", tempMessageId,
+                "status", "processing",
+                "timestamp", System.currentTimeMillis()
+            );
+            sessionManager.forwardMessageToUser(userId, sendingResponse);
+            
+            // 2. 构建消息DTO
+            MessageCreateDTO messageDTO = new MessageCreateDTO();
+            messageDTO.setToId(Long.valueOf(messageData.get("to_id").toString()));
+            messageDTO.setContent((String) messageData.get("content"));
+            messageDTO.setMessageType((String) messageData.getOrDefault("message_type", "TEXT"));
+            
+            // 3. 直接调用现有业务逻辑：好友验证、数据库保存、Redis缓存、MQ推送
+            MessageVO messageVO = messageService.sendMessage(userId, messageDTO);
+            
+            // 4. 立即返回成功结果给发送者
+            Map<String, Object> successResponse = Map.of(
+                "type", "message_sent",
+                "temp_id", tempMessageId,
+                "message", messageVO,
+                "status", "success",
+                "timestamp", System.currentTimeMillis()
+            );
+            sessionManager.forwardMessageToUser(userId, successResponse);
+            
+            log.info("WebSocket私信发送成功: fromUserId={}, toUserId={}, messageId={}", 
+                    userId, messageDTO.getToId(), messageVO.getId());
+            
+        } catch (Exception e) {
+            log.error("WebSocket处理发送消息失败: userId={}, error={}", userId, e.getMessage(), e);
+            
+            // 发送错误响应
+            Map<String, Object> errorResponse = Map.of(
+                "type", "message_error",
+                "temp_id", messageData.getOrDefault("temp_id", "unknown"),
+                "error", e.getMessage(),
+                "status", "failed",
+                "timestamp", System.currentTimeMillis()
+            );
+            sessionManager.forwardMessageToUser(userId, errorResponse);
+        } finally {
+            // 清理上下文
+            BaseContext.setCurrentId(null);
+        }
     }
 }

@@ -15,6 +15,9 @@ public class UserPO {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 用户名（用于登录） */
+    private String username;
+
     /** 昵称 */
     private String nickname;
 

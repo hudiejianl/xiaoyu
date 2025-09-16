@@ -7,7 +7,7 @@
 		<artifactId>xiaoyu</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
-	<artifactId>xiaoyu-server-yuji</artifactId>
+	<artifactId>xiaoyu-server-yuji1</artifactId>
 	<name>xiaoyu-server</name>
 	<description>xiaoyu-server</description>
 
