@@ -17,7 +17,7 @@ public interface PostMapper extends BaseMapper<PostPO>{
     @Select("SELECT p.* FROM posts p " +
             "LEFT JOIN post_stats s ON s.post_id = p.id " +
             "WHERE p.status = 'PUBLISHED' AND p.visibility = 'PUBLIC' " +
-            "ORDER BY s.like_cnt DESC, p.created_at DESC " +
+            "ORDER BY s.view_cnt DESC, p.created_at DESC " +
             "LIMIT #{limit}")
     List<PostPO> selectHotPosts(@Param("limit") int limit);
 }

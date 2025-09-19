@@ -138,7 +138,7 @@ public class PostController {
     }
 
     @GetMapping("/hot")
-    @Operation(summary = "获取热门动态（按点赞数倒序，默认前10条）")
+    @Operation(summary = "获取热门动态（按浏览数倒序，默认前10条）")
     public Result<List<PostVO>> getHotPosts(@RequestParam(value = "limit", required = false) Integer limit) {
         log.info("listHot limit={}", limit);
         var list = postService.listHot(limit);
@@ -155,7 +155,7 @@ public class PostController {
         return Result.success("success", pageResult);
     }
 
-    @GetMapping("/user/{user_id}")
+    @GetMapping("/{user_id}")
     @Operation(summary = "获取指定用户的动态列表")
     public Result getPostsByUser(@PathVariable("user_id") @Min(1) Long userId,
                                  @RequestParam(value = "page", required = false) Integer page,
