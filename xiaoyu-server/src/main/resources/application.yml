@@ -1,14 +1,10 @@
 server:
   port: 8080
-
 spring:
   profiles:
     active: dev
   main:
     allow-circular-references: true
-  mvc:
-    pathmatch:
-      matching-strategy: ANT_PATH_MATCHER
   datasource:
     driver-class-name: ${xiaoyu.datasource.driver-class-name}
     url: jdbc:mysql://${xiaoyu.datasource.host}:${xiaoyu.datasource.port}/${xiaoyu.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8mb4&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
@@ -20,11 +16,18 @@ spring:
       port: ${xiaoyu.redis.port}
       password: ${xiaoyu.redis.password}
       database: ${xiaoyu.redis.database}
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
   rabbitmq:
     host: ${xiaoyu.rabbitmq.host:localhost}
     port: ${xiaoyu.rabbitmq.port:5672}
-    username: ${xiaoyu.rabbitmq.username:guest}
-    password: ${xiaoyu.rabbitmq.password:guest}
+    username: ${xiaoyu.rabbitmq.username:admin}
+    password: ${xiaoyu.rabbitmq.password:123}
     virtual-host: ${xiaoyu.rabbitmq.virtual-host:/}
     connection-timeout: 15000
     publisher-confirm-type: correlated
@@ -58,6 +61,25 @@ xiaoyu:
     admin-secret-key: "xiao yu"
     admin-ttl: 7200000
     admin-token-name: token
+    # unified app jwt config
+    secret: ${jwt.secret:xiaoyu-secret-key-for-jwt-token-generation-2024}
+    expiration: ${jwt.expiration:7200}
+
+messaging:
+  websocket:
+    endpoint: /ws/messages
+    allowed-origins: "*"
+    connection-timeout: 30
+    heartbeat-interval: 30
+  redis:
+    online-user-prefix: "user:online:"
+    unread-count-prefix: "message:unread:"
+    friend-relation-prefix: "friend:relation:"
+    cache-expire-hours: 24
+  message:
+    max-page-size: 100
+    default-page-size: 20
+    max-content-length: 1000
 
 aliyun:
   oss:

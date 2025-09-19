@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.xiaoyu.mapper.MessageMapper">
+<mapper namespace="com.xiaoyua.mapper.MessageMapper">
 
     <!-- 分页查询两个用户之间的聊天记录 -->
-    <select id="selectChatHistory" resultType="com.xiaoyu.entity.MessagePO">
+    <select id="selectChatHistory" resultType="com.xiaoyua.entity.MessagePO">
         SELECT * FROM messages 
         WHERE deleted = 0
         AND ((from_id = #{userId1} AND to_id = #{userId2}) 
